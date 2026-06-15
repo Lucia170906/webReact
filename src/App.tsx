@@ -1,122 +1,69 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react"
+import Producto from "./components/CardProducto"; //Importamos el componente 
 
-function App() {
-  const [count, setCount] = useState(0)
+//Creamos una interfaz para saber como debe ser un productio en nuestra bbdd
+interface ProductoEstructura {
+  id : number, 
+  titulo : string, 
+  descripcion : string, 
+  precio : number;
+}
+function App(){
+  //Creamos el estado usando TypeScript
+  const [contadorCarrito, setContadorCarrito] = useState<number>(0);
+
+  const listaProductos : ProductoEstructura[] = [
+    {
+      id: 1,
+      titulo: "Curso de TypeScript Avanzado",
+      descripcion: "Aprende desde cero hasta crear apps completas.",
+      precio: 49.99
+    },
+    {
+      id: 2,
+      titulo: "Audífonos Gamer Premium",
+      descripcion: "Sonido envolvente para programar concentrado.",
+      precio: 99.99
+    },
+    {
+      id: 3,
+      titulo: "Taza de Programador de Porcelana",
+      descripcion: "Mantiene tu café caliente mientras buscas el error.",
+      precio: 14.99
+    }
+  ]
+  //Creamos la funcion que aumentará el número del carrito
+  const aniadirAlCarrito = () =>{
+    setContadorCarrito(contadorCarrito+1);
+  };
+
+  
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
+      <h1>🛒 Mi Tienda Full Stack</h1>
+      <p>¡Bienvenido al inicio de tu e-commerce!</p>
 
-      <div className="ticks"></div>
+      {/*Renderizamos la litsa de fira dinamica usando .map*/}
+      {listaProductos.map((prod) => (
+        <Producto
+          key = {prod.id} //Requisito obligatorio de React
+          titulo={prod.titulo}
+          descripcion={prod.descripcion}
+          precio={prod.precio}
+          alAniadir={aniadirAlCarrito}
+        />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      ))}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Sección del Carrito */}
+      <div style={{ marginTop: '30px', fontSize: '18px', fontWeight: 'bold' }}>
+        <span>Productos en el carrito: {contadorCarrito} 🛍️</span>
+      </div>
+    </div>
+  );
+  
+   
 }
 
 export default App
