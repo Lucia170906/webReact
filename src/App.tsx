@@ -12,9 +12,14 @@ import Producto from "./components/CardProducto"; //Importamos el componente
 interface ProductoMercadona{
   id : string;
   display_name : string;
+  thumbnail : string;
   price_instructions : {
     unit_price : string; // la api devuelve el precio como string
   };
+}
+
+interface ProductoCarrito extends ProductoMercadona{
+  cantidad : number; //Hereda de producto mercadona y le añadimos la propiedad de cantidad
 }
 function App(){
   //Creamos el estado usando TypeScript
@@ -23,7 +28,7 @@ function App(){
   //Nuevo estado para mostrar un mensaje mientras se cargan lso datos ç
   const [cargando, setCargando] = useState<boolean>(true);
   //Lista de productos seleccionados 
-  const [carrito, setCarrito] = useState<ProductoMercadona[]>([]);
+  const [carrito, setCarrito] = useState<ProductoCarrito[]>([]);
 
 
   
@@ -46,7 +51,8 @@ function App(){
 
           //3. Mercadona guarda los productos dentro de datos.categories[0].products
           //Cortamos la lista para solo guardarnos los primero 20, usamos .slice
-          const primeros20 = datos.categories[0].products.slice(0, 20);
+          const primeros20 = datos.categories[0].products;
+          //.slice(0, 20)
 
           //Guardamos esos 20 en nuestro estado 
           setListaProductos(primeros20); //guardamos los productos en el estado
@@ -65,21 +71,60 @@ function App(){
   }, []) //Las llaves vacías hacen que solo se ejecute una vez al cargar la página
 
   const aniadirAlCarrito = (productoElejido : ProductoMercadona) =>{
-    // cogemos lo que habia en el carrito y le sumamos el nuevo producto 
-    setCarrito([...carrito, productoElejido]);
+   //1. Comprobamos si el producto ya esta en el carrito 
+   const productoExistente = carrito.find((item) => item.id === productoElejido.id);
+
+   if(productoExistente){
+    //2. Si ya existe recorremos el carrito y le sumamos 1 a la cantidad
+    setCarrito(
+      carrito.map((item) =>
+      item.id === productoElejido.id
+      ? {...item, cantidad  : item.cantidad +1 } // moificamos solo este 
+      : item //los demas los dejamos igual
+      )
+    )
+   }else{
+      //3. Si no existe lo metemos al final 
+      //y le inyectamos la "propiedad : 1"
+      setCarrito([...carrito, {...productoElejido, cantidad : 1}]);
+   }
   };
+
+  //Función para restar un prodicto 
+  const restarDelCarrito = (idProducto : string) => {
+    const producto = carrito.find((item) => item.id === idProducto);
+
+    if(producto && producto.cantidad > 1){
+      //Si hay más de 1 le restamos 1 a la cantidad
+      setCarrito(
+        carrito.map((item) =>
+        item.id === idProducto
+          ? {...item, cantidad : item.cantidad -1}
+          : item
+        )
+      )
+    }else{
+      //si la cantidad es 1 lo eliminamos
+      eliminarDelCarrito(idProducto);
+    }
+  };
+
+  //Funcion para borrar un carrito del producto 
+  const eliminarDelCarrito = (idProducto : string) =>{
+    //Filtramos el carrito dehando pasar solo los que NO sean el producto a borrar 
+    setCarrito(carrito.filter((item) => item.id !==idProducto));
+  }
 
   //Calculamos el precio el precio sumando el precio total de cada elementos del carrito 
   const precioTotal = carrito.reduce((acumulador, prod) => {
     const precioNumero = parseFloat(prod.price_instructions.unit_price);
-    return acumulador + precioNumero;
+    return acumulador + (precioNumero * prod.cantidad);
   }, 0)
 
 
 
   return (
-    <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', display: 'flex', gap: '40px' }}>
-      
+    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '40px', alignItems: 'flex-start' }}>      
       {/* SECCIÓN DE PRODUCTOS (Izquierda) */}
       <div style={{ flex: 2 }}>
         <h1>🛒 Mi Tienda Full Stack</h1>
@@ -88,17 +133,25 @@ function App(){
         {/* Si esta cargando muestra el texo, sino muestra los productos */}
 
 
-        {cargando ? (
-          <h2 style={{ marginTop: '40px', color: '#666' }}> Cargando productos...</h2>
-        ): (
-          listaProductos.map((prod) => (
-            <Producto 
-              key={prod.id}
-              titulo={prod.display_name}
-              precio={parseFloat(prod.price_instructions.unit_price)}
-              alAniadir={() => aniadirAlCarrito(prod)} 
-            />
-          ))
+       {cargando ? (
+          <h2 style={{ marginTop: '40px', color: '#666' }}>⏳ Conectando con Mercadona...</h2>
+        ) : (
+          /* NUEVO DISEÑO GRID: Cuadrícula de 3 columnas */
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
+            gap: '20px' 
+          }}>
+            {listaProductos.map((prod) => (
+              <Producto 
+                key={prod.id}
+                titulo={prod.display_name}
+                precio={parseFloat(prod.price_instructions.unit_price)}
+                imagen={prod.thumbnail} 
+                alAniadir={() => aniadirAlCarrito(prod)} 
+              />
+            ))}
+          </div>
         )}
       </div>
 

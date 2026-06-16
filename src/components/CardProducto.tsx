@@ -3,35 +3,62 @@
 interface ProductoProps{
     titulo : string, 
     precio : number, 
+    imagen : string,
     alAniadir : () => void; //esta funcion no devule nada 
 }
 
 //creamos e componente y le exigimos que cupla con los Props 
-function Producto ({titulo , precio, alAniadir} : ProductoProps){
+function Producto ({titulo , precio, imagen,  alAniadir} : ProductoProps){
     return(
-        <div style={{ 
+      <div style={{ 
       background: 'white', 
-      padding: '20px', 
-      borderRadius: '8px', 
-      marginTop: '20px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+      borderRadius: '12px', // Bordes más redondeados
+      overflow: 'hidden', // Evita que la imagen se salga de las esquinas redondeadas
+      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%' // Para que todas las tarjetas midan lo mismo
     }}>
-      <h3>🚀 {titulo}</h3>
-      <p style={{ fontWeight: 'bold', margin: '10px 0' }}>Precio: ${precio}</p>
       
-      <button 
-        onClick={alAniadir}
+      {/* SECCIÓN DE LA IMAGEN */}
+      <img 
+        src={imagen} 
+        alt={titulo} 
         style={{
-          background: '#0070f3',
-          color: 'white',
-          border: 'none',
-          padding: '10px 20px',
-          borderRadius: '5px',
-          cursor: 'pointer'
+          width: '100%',
+          height: '200px',
+          objectFit: 'cover' // Hace que la imagen encaje perfecto sin deformarse
         }}
+      />
+
+      {/* SECCIÓN DE LA INFORMACIÓN */}
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <h3 style={{ fontSize: '16px', marginBottom: '10px', color: '#333' }}>{titulo}</h3>
+        
+        {/* El flexGrow empuja el precio y el botón hacia abajo para que queden alineados */}
+        <div style={{ flexGrow: 1 }}></div> 
+        
+        <p style={{ fontWeight: 'bold', fontSize: '20px', color: '#10b981', margin: '15px 0' }}>
+          {precio} €
+        </p>
+        
+        <button 
+          onClick={alAniadir}
+          style={{
+            background: '#0070f3',
+            color: 'white',
+            border: 'none',
+            padding: '12px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            width: '100%',
+            transition: 'background 0.3s'
+          }}
         >
-        Añadir al carrito
-      </button>
+          Añadir al carrito
+        </button>
+      </div>
     </div>
     );
 }
