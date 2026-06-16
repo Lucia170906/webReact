@@ -2,13 +2,12 @@
 
 interface ProductoProps{
     titulo : string, 
-    descripcion : string,
     precio : number, 
     alAniadir : () => void; //esta funcion no devule nada 
 }
 
 //creamos e componente y le exigimos que cupla con los Props 
-function Producto ({titulo , descripcion, precio, alAniadir} : ProductoProps){
+function Producto ({titulo , precio, alAniadir} : ProductoProps){
     return(
         <div style={{ 
       background: 'white', 
@@ -18,7 +17,6 @@ function Producto ({titulo , descripcion, precio, alAniadir} : ProductoProps){
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
       <h3>🚀 {titulo}</h3>
-      <p>{descripcion}</p>
       <p style={{ fontWeight: 'bold', margin: '10px 0' }}>Precio: ${precio}</p>
       
       <button 
