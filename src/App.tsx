@@ -1,26 +1,17 @@
-import { useState, useEffect } from "react"
-import Producto from "./components/CardProducto"; //Importamos el componente 
+import { useState, useEffect } from "react";
+import {Routes, Route, Link} from "react-router-dom";
+//Importamos las paginas 
+import Inicio from "./pages/Inicio";
+import Carrito from "./pages/Carrito";
+import Tienda from "./pages/Tienda";
 
-//Creamos una interfaz para saber como debe ser un productio en nuestra bbdd
-/*interface ProductoEstructura {
-  id : number, 
-  titulo : string, 
-  descripcion : string, 
-  precio : number;
-}*/
-// interface para el producto de la api de mercadona 
-interface ProductoMercadona{
-  id : string;
-  display_name : string;
-  thumbnail : string;
-  price_instructions : {
-    unit_price : string; // la api devuelve el precio como string
-  };
-}
+//importamos los interface 
+import  type {ProductoMercadona, ProductoCarrito}  from "./types";
 
-interface ProductoCarrito extends ProductoMercadona{
-  cantidad : number; //Hereda de producto mercadona y le añadimos la propiedad de cantidad
-}
+
+
+
+
 function App(){
   //Creamos el estado usando TypeScript
   //Creamo la lista vacía porque aun no e ha "hecho" lapeticion en la api
@@ -28,7 +19,13 @@ function App(){
   //Nuevo estado para mostrar un mensaje mientras se cargan lso datos ç
   const [cargando, setCargando] = useState<boolean>(true);
   //Lista de productos seleccionados 
-  const [carrito, setCarrito] = useState<ProductoCarrito[]>([]);
+  const [carrito, setCarrito] = useState<ProductoCarrito[]>(() =>{
+    //intentamos buscar algun carrito en el disco duro 
+    const carritoGuardado = localStorage.getItem("carrito");
+    //si existe lo transformamos a typescript
+    //si no existe devolvemos una lista vacia
+    return carritoGuardado  ? JSON.parse(carritoGuardado) : [];
+  });
 
 
   
@@ -44,14 +41,16 @@ function App(){
       const obtenerProductos = async () => {
         try{
           //1. Hacemos la llamada al servidorde mercadona
-          const respuesta = await fetch ('https://tienda.mercadona.es/api/categories/112/');
+          const respuesta = await fetch ('https://tienda.mercadona.es/api/categories/120/');
 
           //2. Convertimos la respuesta en un json
           const datos = await respuesta.json();
 
           //3. Mercadona guarda los productos dentro de datos.categories[0].products
           //Cortamos la lista para solo guardarnos los primero 20, usamos .slice
-          const primeros20 = datos.categories[0].products;
+          const primeros20 = datos.categories.flatMap(
+            (subCategoria : {products :ProductoMercadona[]}) => subCategoria.products
+          );
           //.slice(0, 20)
 
           //Guardamos esos 20 en nuestro estado 
@@ -69,6 +68,13 @@ function App(){
 
     
   }, []) //Las llaves vacías hacen que solo se ejecute una vez al cargar la página
+
+  useEffect(() => {
+    //Cada vez que la variabler carrito cambie de valor la guardamis 
+    //Convertimos la lista en texto con JSON.stringify
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+  }, [carrito] // para que el sensor se active cuando carrito cambie
+  );
 
   const aniadirAlCarrito = (productoElejido : ProductoMercadona) =>{
    //1. Comprobamos si el producto ya esta en el carrito 
@@ -121,85 +127,70 @@ function App(){
     return acumulador + (precioNumero * prod.cantidad);
   }, 0)
 
+  //Calculamos el total de productos en el carrito 
+  const totalItems = carrito.reduce((acumulador, item) => acumulador + item.cantidad, 0)
 
 
-  return (
-    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '40px', alignItems: 'flex-start' }}>      
-      {/* SECCIÓN DE PRODUCTOS (Izquierda) */}
-      <div style={{ flex: 2 }}>
-        <h1>🛒 Mi Tienda Full Stack</h1>
-        <p>¡Bienvenido al inicio de tu e-commerce!</p>
 
-        {/* Si esta cargando muestra el texo, sino muestra los productos */}
-
-
-       {cargando ? (
-          <h2 style={{ marginTop: '40px', color: '#666' }}>⏳ Conectando con Mercadona...</h2>
-        ) : (
-          /* NUEVO DISEÑO GRID: Cuadrícula de 3 columnas */
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
-            gap: '20px' 
-          }}>
-            {listaProductos.map((prod) => (
-              <Producto 
-                key={prod.id}
-                titulo={prod.display_name}
-                precio={parseFloat(prod.price_instructions.unit_price)}
-                imagen={prod.thumbnail} 
-                alAniadir={() => aniadirAlCarrito(prod)} 
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* SECCIÓN DEL CARRITÓ DE COMPRAS (Derecha) */}
-      <div style={{ 
-        flex: 1, 
-        background: '#fff', 
-        padding: '20px', 
-        borderRadius: '8px', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        height: 'fit-content',
-        marginTop: '70px'
-      }}>
-        <h2>🛍️ Tu Carrito</h2>
-        <p style={{ margin: '10px 0', color: '#666' }}>
-          Items: <strong>{carrito.length}</strong>
-        </p>
-
-        {/* Lista resumida de lo que hay en el carrito */}
-        <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-          {carrito.map((item, index) => (
-            // Usamos el index porque el mismo producto se puede repetir varias veces
-            <li key={index} style={{ marginBottom: '5px', fontSize: '14px' }}>
-              {item.display_name} - ${parseFloat(item.price_instructions.unit_price)}
-            </li>
-          ))}
-        </ul>
-
-        <hr />
+ return (
+    <div style={{ backgroundColor: '#f4f4f9', minHeight: '100vh' }}>
       
-        <h3 style={{ marginTop: '15px' }}>Total: ${precioTotal.toFixed(2)}</h3>
+      {/* 1. BARRA DE NAVEGACIÓN (Siempre visible) */}
+      <nav style={{ 
+        background: '#fff', 
+        padding: '20px 40px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+      }}>
         
-        {/* Este botón nos servirá para la futura pasarela de pagos */}
-        <button style={{
-          width: '100%',
-          background: '#10b981', // Verde éxito
-          color: 'white',
-          border: 'none',
-          padding: '12px',
-          borderRadius: '6px',
-          marginTop: '15px',
-          fontWeight: 'bold',
-          cursor: 'pointer'
-        }}>
-          Proceder al pago
-        </button>
-      </div>
+        <Link to="/" style={{ textDecoration: 'none', color: '#333', fontSize: '24px', fontWeight: 'bold' }}>
+          🛒 Tienda FullStack
+        </Link>
+        <Link to="/tienda" style={{ textDecoration: 'none', color: '#666', fontSize: '18px' }}>
+            Catálogo
+          </Link>
 
+        <Link to="/carrito" style={{ textDecoration: 'none' }}>
+          <div style={{ background: '#10b981', color: 'white', padding: '10px 20px', borderRadius: '20px', fontWeight: 'bold' }}>
+            Ir al Carrito ({totalItems})
+          </div>
+        </Link>
+      </nav>
+
+      {/* 2. EL CONTENEDOR DE PÁGINAS */}
+      <main style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <Routes>
+
+          {/* --PÁGINA INICIO 1: EL INICIO (Landing Page) --- */}
+         <Route path="/" element={<Inicio />}/>
+          
+          {/* --- PÁGINA TIENDA: EL ESCAPARATE --- */}
+         <Route path="/tienda" element={
+          <Tienda
+          cargando = {cargando}
+          listaProductos={listaProductos}
+          alAniadir={aniadirAlCarrito}
+          />
+         }
+         />
+
+          {/* --- PÁGINA SECUNDARIA: EL CARRITO --- */}
+         <Route path="/carrito" element={
+          <Carrito
+          carrito={carrito}
+          precioTotal={precioTotal}
+          alAniadir={aniadirAlCarrito}
+          alRestar={restarDelCarrito}
+          alEliminar={eliminarDelCarrito}
+          />
+         }
+         />
+
+
+        </Routes>
+      </main>
     </div>
   );
   
